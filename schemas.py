@@ -19,3 +19,10 @@ class ApplicationResponse(BaseModel):
     
     class Config:
         from_attributes = True
+        
+# Schema used to update data
+class ApplicationUpdate(BaseModel):
+    title: str | None = None
+    company: str | None = None
+    status: str | None = None
+    notes: str | None = None
