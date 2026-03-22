@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 import models
 from database import SessionLocal, engine
 import schemas
+from typing import Optional
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -39,13 +40,32 @@ def create_application(
 
 # Get - Fetch all job applications
 @app.get("/applications", response_model=list[schemas.ApplicationResponse])
-def get_applications(db: Session = Depends(get_db)):
-    applications = db.query(models.Application).all()
-    return applications
+def get_applications(
+    status: Optional[str] = None,
+    limit: int = 10,
+    skip: int = 0,
+    db: Session = Depends(get_db)
+):
+    query = db.query(models.Application)
+    
+    # Use status query if availible
+    if status is not None:
+        query = query.filter(models.Application.status == status)
+    
+    # Sort by date    
+    query = query.order_by(models.Application.date_applied.desc())
+    
+    # Pagination
+    query = query.offset(skip).limit(limit)
+    
+    return query.all()
 
 # Get by id - Fetch a specific job application
 @app.get("/applications/{id}", response_model=schemas.ApplicationResponse)
-def get_application(id: int, db: Session = Depends(get_db)):
+def get_application(
+    id: int, 
+    db: Session = Depends(get_db)
+):
     # Attempt to find the application in the database
     application = db.query(models.Application).filter(models.Application.id == id).first()
     
